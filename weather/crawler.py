@@ -1,6 +1,9 @@
 __author__ = 'luosha865'
 import urllib2
 from bs4 import BeautifulSoup
+import requests
+import json
+import scrapy
 
 USCitys=[]
 
@@ -10,26 +13,25 @@ class Crawler:
     def __int__(self):
         pass
     def ReadPage(self,url):
-        page = urllib2.urlopen(url)
+        response = requests.get(url)
         self.url = url
-        self.soup = BeautifulSoup(page)
+        self.hxs = scrapy.Selector(text = response.content)
+        self.getPrecipitation()
+
     def ReadCityHistoryWeather(self,city,year,month,day):
         url ="http://www.wunderground.com/history/airport/%s/%d/%d/%d/DailyHistory.html"%(city,year,month,day)
         print url
         self.ReadPage(url)
+
     def getPrecipitation(self):
-        if self.soup==None:
+        if self.hxs==None:
             return
-        wx =weathercrawler.soup.findAll(attrs={"class":"wx-value"})
-        precipitation =  wx[10].string
-        if precipitation == 'T':
-            precipitation = 0
-        return float(precipitation)
+        self.precipitationlst = self.hxs.xpath("//td/span[text()='Precipitation']/parent::*/following-sibling::*//span[@class='wx-value']//text()").extract()
+
     def getHistoryAvgPrecipitation(self):
-        if self.soup==None:
-            return
-        wx =weathercrawler.soup.findAll(attrs={"class":"wx-value"})
-        precipitation =  wx[11].string
+        if self.precipitationlst == None:
+            return None
+        precipitation =  self.precipitationlst[1]
         if precipitation == 'T':
             precipitation = 0
         return float(precipitation)
@@ -38,3 +40,5 @@ class Crawler:
 weathercrawler = Crawler()
 #weathercrawler.ReadPage("http://www.wunderground.com/history/airport/KBUF/2009/1/1/DailyHistory.html")
 weathercrawler.ReadCityHistoryWeather("KBUF",2009,1,1)
+avgPrecipitation = weathercrawler.getHistoryAvgPrecipitation()
+print avgPrecipitation
