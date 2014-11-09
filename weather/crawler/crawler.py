@@ -7,7 +7,7 @@ import scrapy
 
 USCitys=[]
 
-class Crawler:
+class Crawler(object):
     url = ""
     soup = None
     def __int__(self):
